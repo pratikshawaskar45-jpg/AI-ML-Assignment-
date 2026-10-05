@@ -582,58 +582,61 @@ Prac 9
 In react submit the user data by using api.
 
 App.js
-import React, { useState } from "react";
+
+import './App.css';
+import { useState } from "react";
 
 function App() {
-    const [name, setName] = useState("");
-    const [email, setEmail] = useState("");
+  const [users, setUsers] = useState({ name: "", email: "" });
+  const [message, setMessage] = useState("");
 
-    const submitData = (e) => {
-        e.preventDefault();
+  const handleChange = (e) => {
+    setUsers({ ...users, [e.target.name]: e.target.value });
+  };
 
-        fetch("https://jsonplaceholder.typicode.com/users", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                name: name,
-                email: email
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log(data);
-            alert("User submitted successfully");
-        });
-    };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-    return (
-        <div>
-            <h2>User Form</h2>
+    const res = await fetch("https://jsonplaceholder.typicode.com/users", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(users)
+    });
 
-            <form onSubmit={submitData}>
-                <input
-                    placeholder="Enter name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                />
-                <br /><br />
-
-                <input
-                    placeholder="Enter email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                />
-                <br /><br />
-
-                <button type="submit">Submit</button>
-            </form>
-        </div>
+    setMessage(
+      res.ok ? "Submitted successfully!" : "Failed to submit"
     );
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        name="name"
+        onChange={handleChange}
+        placeholder="Name"
+        required
+      />
+      <br/><br/>
+      <input
+        name="email"
+        onChange={handleChange}
+        placeholder="Email"
+        required
+      />
+      <br/><br/>
+      <button type="submit">Submit</button>
+
+      <h3>{message}</h3>
+    </form>
+  );
 }
 
 export default App;
+
+
+
 
 
 ##Practical 10
