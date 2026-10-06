@@ -9,23 +9,18 @@ image.save("output.png")
 
 
 #Practical 2: Text to text language translation
-!pip install -q transformers sentencepiece
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
-model="facebook/nllb-200-distilled-600M"
-tokenizer= AutoTokenizer.from_pretrained(model)
-translater = AutoModelForSeq2SeqLM.from_pretrained(model)
+!pip install translate
+from translate import Translator
 
 text=input("Enter text: ")
-src= input("""Source code : English=eng_latn , Hindi=hin_Deva, Telugu = tel_Telu, MArathi =mar_Deva, French = fra_latn  Enter Source code""")
-tar=input("Target code: ")
-tokenizer.src_lang= src
+target =input("Enster target language code(eg, en, hi, mr): ")
+try:
+  translator=Translator(to_lang=target)
+  translated_text= translator.translate(text)
 
-input= tokenizer(text,return_tensors="pt")
-output=translater.generate(
-    **input,
-    forced_bos_token_id = tokenizer.convert_tokens_to_ids(tar)
-)
-print("Translated : ", tokenizer.decode(output[0], skip_special_tokens=True))
+  print("translated Text: ", translated_text)
+except Exception as e:
+  print("Error", e)
 
 
 #Practical 3 Text to music generation
@@ -82,21 +77,19 @@ display(Audio("Speech.mp3"))
 #Practical 6 (Text to story generation)
 !pip install transformers
 from transformers import pipeline
-
 generator= pipeline("text-generation" , model="gpt2")
 prompt =input("Enter a story prompt: ")
-
 story = generator(
     prompt,
     max_length=100,
     num_return_sequences=1
 
 )[0]["generated_text"]
-
 print("\n Generated Story: \n", story)
 
-#Practical 8(image to Sketch)
 
+
+#Practical 8(image to Sketch)
 !pip install -q opencv-python
 import cv2
 from Google.collab.patches import cv2.imshow
