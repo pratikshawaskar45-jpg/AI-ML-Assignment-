@@ -1,152 +1,859 @@
-#Practical1 (Image generation)
-from diffusers import StableDiffusionPipeline
-import torch
-model = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5")
-model= model.to("cuda" if torch.cuda.is_available() else "cpu")
-prompt ="A futuristic city at sunset"
-image=model(prompt).images[0]
-image.save("output.png")
+Practical 1 : Creating Simple Application and Testing (Personal Details Form)
+1.	Visual Studio 2026 → New Project → ASP.NET Core Web App (MVC) → Name:
+Models/PersonalDetails.cs
+namespace PersonalDetailsApp.Models
+{
+public class PersonalDetails
+{
+public string Name { get; set; } =
+"";
+public string Contact { get; set; }
+= "";
+public string Location { get; set;
+} = "";
+public string Gender { get; set; }
+= "";
+public List<string> Education { get; set; } = new();
+}
+}
+
+Controllers/HomeController.cs
+using Microsoft.AspNetCore.Mvc; using PersonalDetailsApp.Models;
+public class HomeController : Controller
+{
+public IActionResult Index() => View(new PersonalDetails());
+[HttpPost]
+public IActionResult Index(PersonalDetails model)
+{
+ViewBag.Submitted = true; return View(model);
+}
+} 
+Views/Home/Index.cshtml<input type="checkbox" name="Education" value="HSC" /> HSC
+<input type="checkbox" name="Education" value="Graduate" /> Graduate<br />
+<button type="submit">Submit</button>
+</form>
+@if (ViewBag.Submitted == true)
+{
+<p>My name is @Model.Name</p>
+<p>My Contact no. is @Model.Contact</p>
+<p>My Location is @Model.Location</p>
+<p>My Gender is @Model.Gender</p>
+<p>My Education details are @string.Join(", ", Model.Education)</p>
+}
+@model PersonalDetails
+<h2>Enter Your Details</h2>
+<form method="post">
+Name: <input asp-for="Name" /><br /> Contact: <input asp-for="Contact" /><br
+/>
+Location:
+<select asp-for="Location">
+<option>Thane</option>
+<option>Mumbai</option>
+<option>Dombivali</option>
+<option>Kalyan</option>
+</select><br /> Gender:
+<input type="radio" asp-for="Gender"
+value="Male" /> Male
+<input type="radio" asp-for="Gender" value="Female" /> Female<br />
+Education:
+<input type="checkbox" name="Education" value="SSC" /> SSC
+
+Practical 2: Creating a Testing Project (xUnit) Structure
+CalculatorTesting
+├── CalculatorAPI
+│	└── CalculatorService.cs
+└── CalculatorAPI.Tests
+└── UnitTest1.cs
+1.	New Project → ASP.NET Core Web API → Name
+
+CalculatorService.cs
+namespace CalculatorAPI
+{
+public class CalculatorService
+{
+public int Add(int a, int b) => a + 
+b;
+public int Subtract(int a, int b) 
+=> a - b;
+public int Multiply(int a, int b) 
+=> a * b;
+public double Divide(int a, int b)
+{
+if (b == 0) throw new 
+DivideByZeroException();
+return (double)a / b;
+}
+}}
+
+UnitTest1 .cs
+using CalculatorAPI;
+namespace CalculatorAPI.Tests
+{
+public class CalculatorTests
+{
+[Fact] public void
+Add_TwoNumbers_ReturnsCorrectResult()
+{
+CalculatorService calculator = new CalculatorService();
+int result = calculator.Add(10,
+20);
+Assert.Equal(30, result);
+}
+
+[Fact] public void
+Subtract_TwoNumbers_ReturnsCorrectResult()
+{
+CalculatorService calculator = new CalculatorService();
+int result = calculator.Subtract(20, 10);
+Assert.Equal(10, result);
+}
+[Fact] public void
+Multiply_TwoNumbers_ReturnsCorrectResult()
+{
+CalculatorService calculator = new CalculatorService();
+int result = calculator.Multiply(5, 4);
+Assert.Equal(20, result);
+}
+[Fact] public void
+Divide_TwoNumbers_ReturnsCorrectResult()
+{
+CalculatorService calculator = new CalculatorService();
+double result = calculator.Divide(20, 5);
+Assert.Equal(4, result);
+}
+[Fact] public void
+Divide_ByZero_ThrowsException()
+{
+CalculatorService calculator = new CalculatorService();
+Assert.Throws<DivideByZeroException>(() => calculator.Divide(10, 0));
+}
+}}
+
+Practical 3: Creating Applications with Data (CRUD)
+StudentCrudApp
+├── Models/Student.cs
+├── Data/AppDbContext.cs
+├── Controllers/StudentsController.cs
+└── Views/Students/ (Index, Create, Edit, Delete, Details).cshtml
+
+1.	New Project → ASP.NET Core Web App (MVC) →
+6.	Right-click Controllers → Add → Controller → MVC Controller with views, using Entity Framework → Model: Student, DbContext: AppDbContext → generates controller + all views automatically
+7.	Package Manager Console: then
+8.	Run → navigate to
+
+Models/Student.cs
+namespace StudentCrudApp.Models
+{
+public class Student
+{
+public int Id { get; set; }
+public string Name { get; set; } =
+"";
+public string Course { get; set; }
+= "";
+public int Age { get; set; }
+}
+}
+
+Data/AppDbContext.cs
+using Microsoft.EntityFrameworkCore; using StudentCrudApp.Models;
+namespace StudentCrudApp.Data
+{
+public class AppDbContext : DbContext
+{
+public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+public DbSet<Student> Students { get; set; }
+}
+}
+
+appsettings.json (add)
+"ConnectionStrings": { "DefaultConnection": "Server=
+(localdb)\\mssqllocaldb;Database=StudentCru dDb;Trusted_Connection=True;"
+}
+
+Program.cs (add before)
+builder.Build();
+using Microsoft.EntityFrameworkCore; using StudentCrudApp.Data;
+builder.Services.AddDbContext<AppDbContext> (options =>
+options.UseSqlServer(builder.Configuration. GetConnectionString("DefaultConnection"))); builder.Services.AddControllersWithViews();
+
+Controllers/StudentsController.cs (manual version if scaffolding isn't used)
+using Microsoft.AspNetCore.Mvc; using Microsoft.EntityFrameworkCore; using StudentCrudApp.Data;
+using StudentCrudApp.Models;
+public class StudentsController : Controller
+{
+private readonly AppDbContext _context; public StudentsController(AppDbContext
+context) => _context = context;
+public async Task<IActionResult> Index() => View(await
+_context.Students.ToListAsync());
+public IActionResult Create() => View();
+[HttpPost]
+public async Task<IActionResult> Create(Student student)
+{
+_context.Add(student);
+await _context.SaveChangesAsync(); return
+RedirectToAction(nameof(Index));
+}
+public async Task<IActionResult>
+Edit(int id) => View(await
+_context.Students.FindAsync(id));
+[HttpPost]
+public async Task<IActionResult> Edit(int id, Student student)
+{
+_context.Update(student);
+await _context.SaveChangesAsync(); return
+RedirectToAction(nameof(Index));
+}
+public async Task<IActionResult> Delete(int id) => View(await
+_context.Students.FindAsync(id));
+[HttpPost, ActionName("Delete")] public async Task<IActionResult>
+DeleteConfirmed(int id)
+{
+var student = await
+_context.Students.FindAsync(id);
+_context.Students.Remove(student!); await _context.SaveChangesAsync(); return
+RedirectToAction(nameof(Index));
+}
+}
+
+Views/Students/Index.cshtml
+@model List<StudentCrudApp.Models.Student>
+<h2>Students</h2>
+<a asp-action="Create">Add New</a>
+<table class="table">
+<tr><th>Name</th><th>Course</th>
+<th>Age</th><th>Actions</th></tr> @foreach (var s in Model)
+{
+<tr>
+<td>@s.Name</td><td>@s.Course</td>
+<td>@s.Age</td>
+<td>
+<a asp-action="Edit" asp-route-id="@s.Id">Edit</a> |
+<a asp-action="Delete" asp-route-id="@s.Id">Delete</a>
+</td>
+</tr>
+}
+</table>
+  
+Views/Students/Create.cshtml (same pattern for Edit.cshtml)
+@model StudentCrudApp.Models.Student
+<form asp-action="Create" method="post"> Name: <input asp-for="Name" /><br /> Course: <input asp-for="Course" /><br
+/>
+Age: <input asp-for="Age" /><br />
+<button type="submit">Save</button>
+</form>
+
+ 
+Practical 4: Creating Application Using Cart
+ShoppingCartApp
+├── Models/Product.cs
+├── Models/CartItem.cs
+├── Controllers/ShoppingController.cs
+└── Views/Shopping/Index.cshtml, Cart.cshtml
+1.	New Project → ASP.NET Core Web App (MVC) → Name
+
+Program.cs
+Microsoft.Extensions.DependencyInjection; using Microsoft.Extensions.Hosting;
+var builder = WebApplication.CreateBuilder(args); builder.Services.AddControllersWithViews(); builder.Services.AddDistributedMemoryCache(
+);
+builder.Services.AddSession(options =>
+{
+options.IdleTimeout = TimeSpan.FromMinutes(30);
+options.Cookie.HttpOnly = true; options.Cookie.IsEssential = true;
+});
+var app = builder.Build();
+
+Models/Product.cs
+namespace ShoppingCartApp.Models
+{
+public class Product
+{
+public int Id { get; set; }
+public string Name { get; set; } = string.Empty;
+public decimal Price { get; set; }
+public string ImageUrl { get; set;
+} = string.Empty;
+}
+}
+
+Models/CartItem.cs
+namespace ShoppingCartApp.Models
+{
+public class CartItem
+{
+public Product Product { get; set;
+} = new Product();
+public int Quantity { get; set; }
+}
+}
+
+Controllers/ShoppingController.cs
+using Microsoft.AspNetCore.Mvc; using ShoppingCartApp.Models; using System.Text.Json;
+namespace ShoppingCartApp.Controllers
+{
+public class ShoppingController : Controller
+{
+private static List<Product> products = new List<Product>
+{
+new Product { Id = 1, Name = "Laptop", Price = 55000, ImageUrl="https://via.placeholder.com/150"
+},
+new Product { Id = 2, Name = "Mouse", Price = 600, ImageUrl="https://via.placeholder.com/150"
+},
+new Product { Id = 3, Name = "Keyboard", Price = 1200, ImageUrl="https://via.placeholder.com/150"
+},
+new Product { Id = 4, Name = "Monitor", Price = 9000, ImageUrl="https://via.placeholder.com/150"
+}
+};
+
+public IActionResult Index() => View(products);
+public IActionResult Cart() => View(GetCart());
+public IActionResult AddToCart(int id)
+{
+var cart = GetCart(); var product =
+products.FirstOrDefault(p => p.Id == id);
+if (product != null)
+{
+var item = cart.FirstOrDefault(c => c.Product.Id == id);
+if (item == null) cart.Add(new CartItem { Product = product, Quantity = 1 });
+else item.Quantity++;
+}
+SaveCart(cart); return
+RedirectToAction("Index");
+}
+public IActionResult Remove(int id)
+{
+var cart = GetCart(); var item =
+cart.FirstOrDefault(c => c.Product.Id == id);
+if (item != null) cart.Remove(item);
+SaveCart(cart); return
+RedirectToAction("Cart");
+}
+public IActionResult ClearCart()
+{
+HttpContext.Session.Remove("Cart");
+return RedirectToAction("Cart");
+}
+private List<CartItem> GetCart()
+{
+var cart = HttpContext.Session.GetString("Cart");
+if (string.IsNullOrEmpty(cart)) return new List<CartItem>();
+return JsonSerializer.Deserialize<List<CartItem>> (cart)!;
+}
+private void SaveCart(List<CartItem> cart)
+{
+HttpContext.Session.SetString("Cart", JsonSerializer.Serialize(cart));
+}
+}
+}
+ 
+Views/Shopping/Index.cshtml
+@model List<ShoppingCartApp.Models.Product> @{ ViewData["Title"] = "Products"; }
+<h2>Shopping Cart Application</h2>
+<a asp-action="Cart" class="btn btn-success mb-3">View Cart</a>
+<table class="table table-bordered table-striped">
+<thead class="table-dark"><tr>
+<th>ID</th><th>Product</th><th>Price</th>
+<th>Action</th></tr></thead>
+<tbody>
+@foreach (var item in Model)
+{
+<tr>
+<td>@item.Id</td>
+<td>@item.Name</td><td>₹ @item.Price</td>
+<td><a asp-action="AddToCart" asp-route-id="@item.Id" class="btn btn-primary">Add To Cart</a></td>
+</tr>
+}
+</tbody>
+</table>
+ 
+Views/Shopping/Cart.cshtml
+@model List<ShoppingCartApp.Models.CartItem> @{ ViewData["Title"] = "Cart"; decimal total = 0; }
+<h2>Shopping Cart</h2>
+<a asp-action="Index" class="btn btn-secondary mb-3">Continue Shopping</a> @if (Model.Count == 0)
+{
+<div class="alert alert-warning">Cart
+is Empty.</div>
+}
+else
+{
+<table class="table table-bordered">
+<thead class="table-dark"><tr>
+<th>Product</th><th>Price</th>
+<th>Quantity</th><th>Total</th>
+<th>Action</th></tr></thead>
+<tbody>
+@foreach (var item in Model)
+{
+decimal itemTotal = item.Product.Price * item.Quantity;
+total += itemTotal;
+<tr>
+<td>@item.Product.Name</td>
+<td>₹ @item.Product.Price</td>
+<td>@item.Quantity</td>
+<td>₹ @itemTotal</td>
+<td><a asp-action="Remove" asp-route-id="@item.Product.Id" class="btn btn-danger">Remove</a></td>
+</tr>
+}
+<tr><td colspan="3"><b>Grand Total</b></td><td colspan="2"><b>₹ @total</b></td></tr>
+</tbody>
+</table>
+<a asp-action="ClearCart" class="btn btn-warning">Clear Cart</a>
+}
 
 
-#Practical 2: Text to text language translation
-!pip install translate
-from translate import Translator
+Practical 5: Implementing Security to an Application
+SecurityDemo
+├── Controllers/SecurityController.cs
+├── Views/Security/PublicPage.cshtml, Dashboard.cshtml, Admin.cshtml
+└── Program.cs (Identity + Roles)
 
-text=input("Enter text: ")
-target =input("Enster target language code(eg, en, hi, mr): ")
-try:
-  translator=Translator(to_lang=target)
-  translated_text= translator.translate(text)
+1.	New Project → ASP.NET Core Web App (MVC) → Name
+Controllers/SecurityController.cs
+using Microsoft.AspNetCore.Authorization; using Microsoft.AspNetCore.Mvc;
+namespace SecurityDemo.Controllers
+{
+public class SecurityController : Controller
+{
+public IActionResult PublicPage()
+=> View();
+[Authorize]
+public IActionResult Dashboard() =>
+View();
+[Authorize(Roles = "Admin")] public IActionResult Admin() =>
+View();
+}
+}
 
-  print("translated Text: ", translated_text)
-except Exception as e:
-  print("Error", e)
+Program.cs (key parts)
+using Microsoft.AspNetCore.Identity; using Microsoft.EntityFrameworkCore; using SecurityDemo.Data;
+var builder = WebApplication.CreateBuilder(args); var connectionString =
+builder.Configuration.GetConnectionString("
+DefaultConnection")
+?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+builder.Services.AddDbContext<ApplicationDb Context>(options => options.UseSqlServer(connectionString)); builder.Services.AddDefaultIdentity<Identit yUser>(options => options.SignIn.RequireConfirmedAccount = false)
+.AddRoles<IdentityRole>()
+.AddEntityFrameworkStores<ApplicationDbCont ext>(); builder.Services.AddControllersWithViews();
+var app = builder.Build();
+if (!app.Environment.IsDevelopment())
+{
+app.UseExceptionHandler("/Home/Error"); app.UseHsts();
+}
+app.UseHttpsRedirection(); app.UseStaticFiles(); app.UseRouting(); app.UseAuthentication(); app.UseAuthorization();
+app.MapControllerRoute(name: "default", pattern: "
+{controller=Home}/{action=Index}/{id?}");
+app.MapRazorPages();
+// Seed roles using (var scope =
+app.Services.CreateScope())
+{
+var roleManager = scope.ServiceProvider.GetRequiredService<Ro leManager<IdentityRole>>();
+string[] roles = { "Admin", "User" }; foreach (var role in roles)
+if (!await
+roleManager.RoleExistsAsync(role))
+await roleManager.CreateAsync(new IdentityRole(role));
+}
+app.Run();
 
+Views/Security/PublicPage.cshtml
+@{ ViewData["Title"] = "Public Page"; }
+<div class="text-center"><h1>Public Page</h1><p>Accessible by all users without login.</p></div>
 
-#Practical 3 Text to music generation
-!pip install transformers scipy
-from transformers import AutoProcessor, MusicgenForConditionalGeneration
-import scipy.io.wavfile
-
-processor = AutoProcessor.from_pretrained("facebook/musicgen-small")
-model = MusicgenForConditionalGeneration.from_pretrained("facebook/musicgen-small")
-
-prompt=input("Enatr a music description: ")
-
-inputs=processor(text=[prompt], return_tensors="pt")
-audio = model.generate(
-    **inputs,
-    max_new_tokens=265
-)
-scipy.io.wavfile.write("music.wav", 32000,audio[0,0].numpy())
-print("Music generated and save as music.wav")
-
-
-#Practical 4 (Image to text generation)
-!pip install transformers pillow
-from transformers import BlipProcessor, BlipForConditionalGeneration
-from PIL import Image
-
-processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-large")
-model =BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-large")
-
-image_path=input("Enter image Path: ")
-image=Image.open(image_path).convert("RGB")
-inputs = processor(images=image, return_tensors="pt")
-output = model.generate(
-    **inputs,
-    max_new_tokens=50
-)
-print("DEscription ", processor.decode(output[0], skip_special_tokens=True))
-
-#Practical 5 (Speech generation)
-
-!pip install -q gTTS==2.5.4 click==8.1.8
-!pip install -q gTTS
-from gtts import gTTS
-from IPython.display import Audio, display
-
-text = input("Enter text : ")
-
-tts= gTTS(text=text, lang="en")
-tts.save("Speech.mp3")
-print("Speech generated successfully!")
-display(Audio("Speech.mp3"))
+Views/Security/Dashboard.cshtml
+@{ ViewData["Title"] = "Security Dashboard"; }
+<div class="text-center"><h1>Welcome to Security Dashboard</h1><p>Only
+authenticated users can access this.</p>
+</div>
 
 
-#Practical 6 (Text to story generation)
-!pip install transformers
-from transformers import pipeline
-generator= pipeline("text-generation" , model="gpt2")
-prompt =input("Enter a story prompt: ")
-story = generator(
-    prompt,
-    max_length=100,
-    num_return_sequences=1
+Views/Security/Admin.cshtml
+@{ ViewData["Title"] = "Admin Page"; }
+<div class="text-center"><h1>Admin Panel</h1><p>Only Admin role users can access this.</p></div>
 
-)[0]["generated_text"]
-print("\n Generated Story: \n", story)
+_Layout.cshtml nav additions
+<li class="nav-item"><a class="nav-link" asp-controller="Security" asp-action="PublicPage">Public Page</a></li>
+<li class="nav-item"><a class="nav-link" asp-controller="Security" asp-action="Dashboard">Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" asp-controller="Security" asp-action="Admin">Admin</a></li>
 
 
-#Practical 7
-!pip install -U pip
-!pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu
-!pip install huggingface_hub
-from llama_cpp import Llama
-llm = Llama.from_pretrained(
-    repo_id="TheBloke/zephyr-7B-beta-GGUF",
-    filename="zephyr-7b-beta.Q4_K_M.gguf",
-    n_ctx=4096,
-    verbose=False
-)
-history = [{"role": "system", "content": "You are a helpful AI assistant."}]
-while True:
-    prompt = input("You: ")
-    if prompt.lower() in ["exit", "quit", "bye"]:
-        print("Exiting chat.")
-        break
-    history.append({"role": "user", "content": prompt})
-    output = llm.create_chat_completion(
-        messages=history,
-        max_tokens=100
-    )
-    reply = output["choices"][0]["message"]["content"]
-    history.append({"role": "assistant", "content": reply})
-    print("Assistant:", reply)
+Practical 6: URL Routing and Dependency Injection
+RoutingDIExample
+├── Controllers/StudentController.cs
+└── Services/IStudentService.cs, StudentService.cs
+1.	New Project → ASP.NET Core Web API → Name
+* Use controllers: Yes
+
+Program.cs
+using RoutingDIExample.Services;
+var builder = WebApplication.CreateBuilder(args); builder.Services.AddControllers(); builder.Services.AddOpenApi(); builder.Services.AddScoped<IStudentService, StudentService>();
+var app = builder.Build();
+if (app.Environment.IsDevelopment()) app.MapOpenApi(); app.UseHttpsRedirection(); app.UseAuthorization(); app.MapControllers();
+app.Run();
+
+Services/IStudentService.cs
+namespace RoutingDIExample.Services
+{
+public interface IStudentService
+{
+object GetStudentDetails(int id); string GetStudentName(int id);
+}
+}
+
+Services/StudentService.cs
+namespace RoutingDIExample.Services
+{
+public class StudentService : IStudentService
+{
+public object GetStudentDetails(int
+id)
+{
+if (id == 101) return new { Id
+= 101, Name = "Rahul Sharma", Course = "BCA" };
+if (id == 102) return new { Id
+= 102, Name = "Priya Patil", Course = "BCA"
+};
+if (id == 103) return new { Id
+= 103, Name = "Amit Joshi", Course = "BCA"
+};
+return new { Message = "Student not found" };
+}
+public string GetStudentName(int
+id)
+{
+  if(id == 1) return"Rahul sharma"
+  if(id == 2) return"virat kohli"
+  if(id == 3) return"sachiln tendulkar"
+return "Student not found";
+}}}
 
 
-#Practical 8(image to Sketch)
-!pip install -q opencv-python
-import cv2
-from Google.collab.patches import cv2.imshow
+Controllers/StudentController.cs
+using Microsoft.AspNetCore.Mvc; using RoutingDIExample.Services;
+namespace RoutingDIExample.Controllers
+{
+[ApiController] [Route("api/students")]
+public class StudentController : ControllerBase
+{
+private readonly IStudentService
+_studentService;
+public StudentController(IStudentService studentService) => _studentService = studentService;
+[HttpGet]
+public IActionResult Get() => Ok("Student Management System is running.");
+[HttpGet("{id}")]
+public IActionResult GetStudent(int id) => Ok("Student ID: " + id);
+[HttpGet("{id}/details")]
+public IActionResult GetStudentDetails(int id) => Ok(_studentService.GetStudentDetails(id));
+[HttpGet("{id}/name")] public IActionResult
+GetStudentName(int id) => Ok(_studentService.GetStudentName(id));
+}
+}
+ 
+URL	Purpose
+/api/students	test controller
+/api/students/1 01	route parameter
+/api/students/1 01 /details	full details (DI)
+/api/students/1 01 /name	name only (DI)
 
-image=cv2.imread("/content/sample_data/ganpati.jpeg")
-gray=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-sketch = cv2.Canny(gray, 50, 150)
 
-cv2.imwrite("sketch1.jpg", sketch)
-print("Sketch generated successfully")
-cv2_imshow(sketch)
+Practical 7: Creating Application with Caching
+CachingPractical
+├── Controllers/MovieController.cs
+└── Views/Movie/Index.cshtml, Showtimes.cshtml
+
+Programmer.cs
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddControllersWithViews(); builder.Services.AddDistributedMemoryCache(
+);
+builder.Services.AddSession(); builder.Services.AddMemoryCache();
+var app = builder.Build(); app.UseHttpsRedirection(); app.UseStaticFiles(); app.UseRouting(); app.UseSession(); app.UseAuthorization();
+app.MapControllerRoute(name: "default", pattern: "
+{controller=Movie}/{action=Index}/{id?}"); app.Run();
+
+Controllers/MovieController.cs
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+public class MovieController : Controller
+{
+private readonly IMemoryCache _cache; public MovieController(IMemoryCache
+cache) => _cache = cache;
+public IActionResult Index() => View(); [HttpPost]
+public IActionResult SelectTheatre(string theatre)
+{
+HttpContext.Session.SetString("Theatre", theatre);
+return RedirectToAction("Showtimes");
+}
+public IActionResult Showtimes()
+{
+string theatre = HttpContext.Session.GetString("Theatre") ??
+"";
+string message;
+if (!_cache.TryGetValue(theatre, out object? data))
+{
+var timings = new { Timings = new[] { "9:00 AM", "12:00 PM", "5:00 PM" },
+Movies =
+new[] { "ABC", "PQR", "XYZ" } };
+_cache.Set(theatre, timings, TimeSpan.FromSeconds(30));
+message = "Loaded fresh (not from cache)";
+ViewBag.Data = timings;
+}
+else
+{
+message = "Reading From Cache"; ViewBag.Data = data;
+}
+ViewBag.Message = message; return View();
+}
+}
 
 
-#Practical 10(music to text generation)
-!pip install -q transformers librosa
-import warnings
-warnings.filterwarnings("ignore")
+Views/Movie/Index.cshtml
+<h2>Movie Ticket Booking</h2>
+<form method="post" asp-action="SelectTheatre">
+<select name="theatre">
+<option>IMAX</option>
+<option>PVR</option>
+<option>MOVIEMAX</option>
+</select>
+<button type="submit">OK</button>
+</form>
 
-import librosa
-from transformers import pipeline
+Views/Movie/Showtimes.cshtml
+<h2>@ViewBag.Message</h2>
+<p>Timings: @string.Join(", ", ViewBag.Data.Timings)</p>
+<p>Movies: @string.Join(", ", ViewBag.Data.Movies)</p>
 
-model=pipeline(
-    "automatic-speech-recognition",
-    model="openai/whisper-small"
-)
 
-f = input("Audio path: ")
-y , sr = librosa.load(f, sr=16000)
-print("Generated Text: ", model(
-    y,
-    task="transcribe",
-    language="en"
-)["text"])
+Practical 8: Creating RESTful Services
+StudentRESTAPI
+├── Models/Student.cs
+└── Controllers/StudentsController.cs
+1.	New Project → ASP.NET Core Web API → NameI
+
+Models/Student.cs
+namespace StudentRESTAPI.Models
+{
+public class Student
+{
+public int Id { get; set; }
+public string Name { get; set; } = string.Empty;
+public string Course { get; set; }
+= string.Empty;
+public int Age { get; set; }
+}
+}
+
+Controllers/StudentsController.cs
+using Microsoft.AspNetCore.Mvc; using StudentRESTAPI.Models;
+namespace StudentRESTAPI.Controllers
+{
+[ApiController] [Route("api/[controller]")] public class StudentsController :
+ControllerBase
+{
+private static readonly List<Student> students = new()
+{
+new Student { Id = 1, Name = "Rahul", Course = "MCA", Age = 22 },
+new Student { Id = 2, Name = "Priya", Course = "MCA", Age = 21 }
+};
+[HttpGet]
+public IActionResult GetAllStudents() => Ok(students);
+[HttpGet("{id}")]
+public IActionResult GetStudent(int
+id)
+{
+var student = students.FirstOrDefault(s => s.Id == id);
+if (student == null) return
+NotFound();
+return Ok(student);
+}
+[HttpPost]
+public IActionResult CreateStudent(Student student)
+{
+student.Id = students.Count +
+1;
+students.Add(student); return
+CreatedAtAction(nameof(GetStudent), new {
+id = student.Id }, student);
+}
+[HttpPut("{id}")] public IActionResult
+UpdateStudent(int id, Student updatedStudent)
+{
+var student = students.FirstOrDefault(s => s.Id == id);
+if (student == null) return
+NotFound();
+student.Name = updatedStudent.Name;
+student.Course = updatedStudent.Course;
+student.Age = updatedStudent.Age;
+return Ok(student);
+}
+[HttpDelete("{id}")] public IActionResult
+DeleteStudent(int id)
+{
+var student = students.FirstOrDefault(s => s.Id == id);
+if (student == null) return
+NotFound();
+students.Remove(student); return NoContent();
+}
+}}
+
+Program.cs
+var builder = WebApplication.CreateBuilder(args); builder.Services.AddControllers(); var app = builder.Build(); app.UseHttpsRedirection(); app.MapControllers();
+app.Run();
+
+Method	URL	Purpose
+GET	/api/students	Get all
+GET	/api/students/1	Get by ID
+POST	/api/students	Create
+PUT	/api/students/1	Update
+DELETE	/api/students/1	Delete
+
+Practical 9: Creating Applications with Controllers and Views 
+ControllersViewsApp
+├── Controllers/ProductController.cs
+├── Models/ProductModel.cs
+└── Views/Product/Index.cshtml, Details.cshtml
+1.	New Project → ASP.NET Core Web App (MVC) → Name
+
+Models/ProductModel.cs
+namespace ControllersViewsApp.Models
+{
+public class ProductModel
+{
+public int Id { get; set; }
+public string Name { get; set; } ="";
+public decimal Price { get; set; }}}
+ 
+Controllers/ProductController.cs
+using Microsoft.AspNetCore.Mvc; using ControllersViewsApp.Models;
+namespace ControllersViewsApp.Controllers
+{
+public class ProductController : Controller
+{
+private static List<ProductModel> products = new()
+{
+new ProductModel { Id = 1, Name
+= "Laptop", Price = 55000 },
+new ProductModel { Id = 2, Name
+= "Mouse", Price = 600 }
+};
+public IActionResult Index() => View(products);
+public IActionResult Details(int
+id)
+{
+var product = products.FirstOrDefault(p => p.Id == id);
+if (product == null) return
+NotFound();
+return View(product);}}}
+ 
+Views/Product/Index.cshtml
+@model List<ControllersViewsApp.Models.ProductMode l>
+<h2>Product List</h2>
+<table class="table">
+<tr><th>ID</th><th>Name</th><th>Price</th>
+<th></th></tr>
+@foreach (var p in Model)
+{
+<tr>
+<td>@p.Id</td><td>@p.Name</td>
+<td>₹@p.Price</td>
+<td><a asp-action="Details" asp-route-id="@p.Id">View Details</a></td>
+</tr>
+}
+</table>
+
+Views/Product/Details.cshtml
+@model ControllersViewsApp.Models.ProductModel
+<h2>Product Details</h2>
+<p><b>ID:</b> @Model.Id</p>
+<p><b>Name:</b> @Model.Name</p>
+<p><b>Price:</b> ₹@Model.Price</p>
+<a asp-action="Index">Back to List</a>
+
+
+Practical 1 0: Razor Pages and Tag Helpers
+RazorStudentApp
+├── Models/Student.cs
+├── Pages/Index.cshtml
+├── Pages/Index.cshtml.cs
+└── Pages/_ViewImports.cshtml
+1.	New Project → ASP.NET Core Web App (Razor Pages) → Name
+ 
+Models/Student.cs
+namespace RazorStudentApp.Models
+{
+public class Student
+{
+public int StudentId { get; set; } public string Name { get; set; } =
+string.Empty;
+public string Email { get; set; } = string.Empty;
+public string Course { get; set; }
+= string.Empty;
+}
+}
+
+Program.cs
+var builder = WebApplication.CreateBuilder(args); builder.Services.AddRazorPages(); var app = builder.Build();
+if (!app.Environment.IsDevelopment())
+{
+app.UseExceptionHandler("/Error"); app.UseHsts();
+}
+app.UseHttpsRedirection(); app.UseStaticFiles(); app.UseRouting(); app.UseAuthorization();
+app.MapRazorPages(); app.Run();
+ 
+Pages/Index.cshtml.cs
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages; using RazorStudentApp.Models;
+namespace RazorStudentApp.Pages
+{
+public class IndexModel : PageModel
+{
+[BindProperty]
+public Student Student { get; set;
+} = new Student();
+public bool Submitted { get; set; } public void OnGet() { }
+public void OnPost() => Submitted =
+true;
+}
+}
+
+Pages/Index.cshtml
+@page
+@model IndexModel
+@{ ViewData["Title"] = "Student Registration"; }
+<form method="post">
+<label asp-for="Student.StudentId">
+</label>
+<input asp-for="Student.StudentId" />
+<br />
+<label asp-for="Student.Name"></label>
+<input asp-for="Student.Name" /><br />
+<label asp-for="Student.Email"></label>
+<input asp-for="Student.Email" /><br />
+<label asp-for="Student.Course">
+</label>
+<select asp-for="Student.Course">
+<option value="">-- Select Course -
+-</option>
+<option value="BCA">BCA</option>
+<option value="BSc IT">BSc IT</option>
+<option value="BSc Data
+Science">BSc Data Science</option>
+<option value="MSc IT">MSc IT</option>
+</select><br />
+<button type="submit">Register Student</button>
+</form>
+@if (Model.Submitted)
+{
+<h4>Registration Successful</h4>
+<p><b>Student ID:</b>
+@Model.Student.StudentId</p>
+<p><b>Name:</b> @Model.Student.Name</p>
+<p><b>Email:</b> @Model.Student.Email</p>
+<p><b>Course:</b>
+@Model.Student.Course</p>
+}
+ 
+Pages/_ViewImports.cshtml
+@Model.Student.StudentId</p>
+<p><b>Name:</b> @Model.Student.Name</p>
+<p><b>Email:</b> @Model.Student.Email</p>
+<p><b>Course:</b>
+@Model.Student.Course</p>
+}
 
