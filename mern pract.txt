@@ -88,6 +88,32 @@ story = generator(
 print("\n Generated Story: \n", story)
 
 
+#Practical 7
+!pip install -U pip
+!pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu
+!pip install huggingface_hub
+from llama_cpp import Llama
+llm = Llama.from_pretrained(
+    repo_id="TheBloke/zephyr-7B-beta-GGUF",
+    filename="zephyr-7b-beta.Q4_K_M.gguf",
+    n_ctx=4096,
+    verbose=False
+)
+history = [{"role": "system", "content": "You are a helpful AI assistant."}]
+while True:
+    prompt = input("You: ")
+    if prompt.lower() in ["exit", "quit", "bye"]:
+        print("Exiting chat.")
+        break
+    history.append({"role": "user", "content": prompt})
+    output = llm.create_chat_completion(
+        messages=history,
+        max_tokens=100
+    )
+    reply = output["choices"][0]["message"]["content"]
+    history.append({"role": "assistant", "content": reply})
+    print("Assistant:", reply)
+
 
 #Practical 8(image to Sketch)
 !pip install -q opencv-python
